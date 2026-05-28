@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>vCard QR Generator</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+<div class="max-w-5xl mx-auto p-6">
+    <header class="mb-6">
+    <h1 class="text-3xl font-bold text-emerald-800">vCard QR Generator</h1>
+    <p class="text-slate-500">Generate single or bulk QR codes with a centered logo.</p>
+    </header>
+
+    <!-- Tabs -->
+    <div class="flex gap-2 mb-4 border-b border-slate-200">
+    <button data-tab="single" class="tab-btn px-4 py-2 font-medium border-b-2 border-emerald-600 text-emerald-700">Single</button>
+    <button data-tab="bulk"   class="tab-btn px-4 py-2 font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700">Bulk
+(Excel)</button>
+    </div>
+
+    <!-- SINGLE -->
+    <section id="tab-single" class="tab-panel bg-white rounded-xl shadow p-6">
+    <form id="single-form" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label class="block">
+            <span class="text-sm font-medium">First Name *</span>
+            <input name="first" required class="mt-1 w-full border rounded p-2" />
+        </label>
+        <label class="block">
+            <span class="text-sm font-medium">Last Name</span>
+            <input name="last" class="mt-1 w-full border rounded p-2" />
+        </label>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label class="block">
+            <span class="text-sm font-medium">Position / Title</span>
+            <input id="single-title" class="mt-1 w-full border rounded p-2" />
+        </label>
+        <label class="block">
+            <span class="text-sm font-medium">Organization</span>
+            <input id="single-org" class="mt-1 w-full border rounded p-2" />
+        </label>
+        </div>
+
+        <div>
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold">Additional fields</h3>
+            <button type="button" id="add-field-single"
+                    class="text-sm bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700">
+            + Add field
+            </button>
+        </div>
+        <div id="single-fields" class="space-y-2"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label class="block">
+            <span class="text-sm font-medium">Logo (optional)</span>
+            <input type="file" name="logo" accept="image/*" class="mt-1 w-full border rounded p-2" />
+        </label>
+        <label class="block">
+            <span class="text-sm font-medium">Download filename</span>
+            <input name="filename" placeholder="qr" class="mt-1 w-full border rounded p-2" />
+        </label>
+        </div>
+
+        <div class="flex items-center gap-3">
+        <button class="bg-emerald-700 text-white px-5 py-2 rounded hover:bg-emerald-800">Generate &amp; Download</button>
+        <span id="single-status" class="text-sm text-slate-500"></span>
+        </div>
+    </form>
+    </section>
+
+    <!-- BULK -->
+    <section id="tab-bulk" class="tab-panel bg-white rounded-xl shadow p-6 hidden">
+    <form id="bulk-form" class="space-y-5">
+        <label class="block">
+        <span class="text-sm font-medium">Excel file *</span>
+        <input type="file" id="excel-file" name="file" accept=".xlsx" required
+                class="mt-1 w-full border rounded p-2" />
+        </label>
+
+        <div id="mapping-area" class="hidden space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label class="block">
+            <span class="text-sm font-medium">First Name column *</span>
+            <select id="first-col" class="mt-1 w-full border rounded p-2"></select>
+            </label>
+            <label class="block">
+            <span class="text-sm font-medium">Last Name column *</span>
+            <select id="last-col" class="mt-1 w-full border rounded p-2"></select>
+            </label>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label class="block">
+            <span class="text-sm font-medium">Position column</span>
+            <select id="title-col" class="mt-1 w-full border rounded p-2"></select>
+            </label>
+            <label class="block">
+            <span class="text-sm font-medium">Organization column</span>
+            <select id="org-col" class="mt-1 w-full border rounded p-2"></select>
+            </label>
+        </div>
+
+        <div>
+            <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold">Additional fields from columns</h3>
+            <button type="button" id="add-field-bulk"
+                    class="text-sm bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700">
+                + Add field
+            </button>
+            </div>
+            <div id="bulk-fields" class="space-y-2"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label class="block">
+            <span class="text-sm font-medium">Logo (optional)</span>
+            <input type="file" name="logo" accept="image/*" class="mt-1 w-full border rounded p-2" />
+            </label>
+            <label class="block">
+            <span class="text-sm font-medium">Output filename</span>
+            <input name="filename" placeholder="contacts_with_qr" class="mt-1 w-full border rounded p-2" />
+            </label>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button class="bg-emerald-700 text-white px-5 py-2 rounded hover:bg-emerald-800">Generate &amp; Download</button>
+            <span id="bulk-status" class="text-sm text-slate-500"></span>
+        </div>
+        </div>
+    </form>
+    </section>
+</div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
