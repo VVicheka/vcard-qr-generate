@@ -204,7 +204,7 @@
       const res = await fetch('/api/generate-bulk', { method: 'POST', body: fd });
       if (!res.ok) throw new Error((await res.json()).error || 'Failed');
       const blob = await res.blob();
-      triggerDownload(blob, (fd.get('filename') || 'contacts_with_qr') + '.xlsx');
+      triggerDownload(blob, (fd.get('filename') || 'qr_codes') + '.zip');
       status.textContent = 'Done!';
     } catch (err) {
       status.textContent = 'Error: ' + err.message;

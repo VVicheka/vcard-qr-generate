@@ -10,11 +10,10 @@ from qr_generator import (
     qr_png_bytes,
     read_excel_headers,
     read_excel_rows,
-    build_excel_with_qr,
+    build_zip_with_qr,
 )
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024  # 25 MB cap
 
 @app.route("/")
 def index():
@@ -78,13 +77,13 @@ def generate_bulk():
     if not rows:
         return jsonify({"error": "No data rows found"}), 400
 
-    xlsx = build_excel_with_qr(rows, mapping, logo_bytes=logo_bytes)
-    filename = (request.form.get("filename") or "contacts_with_qr").strip()
+    zip_buf = build_zip_with_qr(rows, mapping, logo_bytes=logo_bytes)
+    filename = (request.form.get("filename") or "qr_codes").strip()
     return send_file(
-        xlsx,
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        zip_buf,
+        mimetype="application/zip",
         as_attachment=True,
-        download_name=f"{filename}.xlsx",
+        download_name=f"{filename}.zip",
     )
 
 
