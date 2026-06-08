@@ -46,10 +46,21 @@ def build_vcard(first, last, fields):
 
 
 def make_qr_with_logo(data, logo_bytes=None, qr_size=2000, logo_ratio=0.22):
-    """Return a PIL Image of the QR with an optional centered logo."""
+    """Return a PIL Image of the QR with an optional centered logo.
+
+    Error correction is kept as low as is safe so the QR has fewer modules
+    (bigger squares) and stays scannable when printed small. A logo covers
+    part of the code, so we bump the level up when one is present.
+    """
+    # Logo covers ~logo_ratio^2 of the area (~5% at 0.22). Q (25%) leaves
+    # plenty of margin; M (15%) is fine with no logo and gives the cleanest QR.
+    error_correction = (
+        qrcode.constants.ERROR_CORRECT_Q if logo_bytes
+        else qrcode.constants.ERROR_CORRECT_M
+    )
     qr = qrcode.QRCode(
         version=None,
-        error_correction=qrcode.constants.ERROR_CORRECT_H,
+        error_correction=error_correction,
         box_size=20,
         border=3,
     )
