@@ -9,6 +9,44 @@ import zipfile
 from openpyxl import load_workbook
 from PIL import Image
 import qrcode
+from qrcode.image.styledpil import StyledPilImage
+from qrcode.image.styles.moduledrawers.pil import StyledPilQRModuleDrawer
+from PIL import ImageDraw
+
+# Supersampling factor for smooth circle edges (matches qrcode's own drawer).
+_ANTIALIAS = 4
+
+
+class SmallCircleModuleDrawer(StyledPilQRModuleDrawer):
+    """Draws each module as a small centered circle.
+
+    ``dot_ratio`` is the circle diameter relative to the module size: 1.0
+    fills the whole module (touching neighbours), lower values give thinner
+    dots with more white space around them. Thinner dots read more cleanly
+    when printed (e.g. UV).
+    """
+
+    def __init__(self, dot_ratio=0.6):
+        self.dot_ratio = dot_ratio
+
+    def initialize(self, *args, **kwargs):
+        super().initialize(*args, **kwargs)
+        box_size = self.img.box_size
+        fake_size = box_size * _ANTIALIAS
+        diameter = max(1, int(fake_size * self.dot_ratio))
+        offset = (fake_size - diameter) // 2
+        self.circle = Image.new(
+            self.img.mode, (fake_size, fake_size), self.img.color_mask.back_color
+        )
+        ImageDraw.Draw(self.circle).ellipse(
+            (offset, offset, offset + diameter, offset + diameter),
+            fill=self.img.paint_color,
+        )
+        self.circle = self.circle.resize((box_size, box_size), Image.LANCZOS)
+
+    def drawrect(self, box, is_active: bool):
+        if is_active:
+            self.img._img.paste(self.circle, (box[0][0], box[0][1]))
 
 
 # vCard field type -> how it renders in the vCard text
@@ -62,17 +100,26 @@ def make_qr_with_logo(data, logo_bytes=None, qr_size=2000, logo_ratio=0.22):
         version=None,
         error_correction=error_correction,
         box_size=20,
-        border=3,
+        border=4,  # QR spec minimum quiet zone; below 4 print scans often fail
     )
     qr.add_data(data)
     qr.make(fit=True)
-    qr_img = qr.make_image(fill_color="black", back_color="white").convert("RGBA")
+    # Dot-style modules: each "on" module is drawn as a filled circle, which
+    # holds up better when printed (e.g. UV) than tightly-packed squares.
+    qr_img = qr.make_image(
+        image_factory=StyledPilImage,
+        module_drawer=SmallCircleModuleDrawer(dot_ratio=0.6),
+        fill_color="black",
+        back_color="white",
+    ).convert("RGBA")
 
     natural = qr_img.size[0]
     scale = max(1, round(qr_size / natural))
     final_size = natural * scale
     if scale > 1:
-        qr_img = qr_img.resize((final_size, final_size), Image.NEAREST)
+        # LANCZOS keeps the dot edges smooth/round when scaling up,
+        # whereas NEAREST would re-introduce blocky pixelation.
+        qr_img = qr_img.resize((final_size, final_size), Image.LANCZOS)
 
     if logo_bytes:
         logo = Image.open(io.BytesIO(logo_bytes)).convert("RGBA")
